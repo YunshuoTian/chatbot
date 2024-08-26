@@ -1,0 +1,9 @@
+flask==2.3.0
+flask-sqlalchemy
+flask-migrate
+flask-login
+Werkzeug
+openai
+python-dotenv
+certifi
+sqlalchemy

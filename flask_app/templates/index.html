@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Chatbot Homepage{% endblock %}
+
+{% block content %}
+<div class="index-container">
+    <h1>Chatbot Homepage</h1>
+    
+    {% if current_user.is_authenticated %}
+        <h3>Hello {{ current_user.username }}!</h3>
+        <div class="link-group">
+            <a href="{{ url_for('chat.chat') }}">Start Chat</a>
+            <a href="{{ url_for('chat.url_helper') }}">Webpage Helper</a>
+        </div>
+        <div class="link-group">
+            <a href="{{ url_for('users.logout') }}">Logout</a>
+        </div>
+    {% else %}
+        <h3>Hello!</h3>
+        <div class="link-group">
+            <a href="{{ url_for('users.signup') }}">Sign Up</a>
+            <a href="{{ url_for('users.login') }}">Login</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

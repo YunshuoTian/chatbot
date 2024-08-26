@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webpage Helper</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Webpage Helper</h1>
+
+        <!-- URL Form -->
+        <div class="message-input">
+            <textarea id="urls" name="urls" placeholder="Enter URLs here..." required></textarea>
+            <button type="submit" class="btn-primary" onclick="submitForm()">Process URLs</button>
+        </div>
+
+        <!-- Response Container -->
+        <div id="responseContainer" class="chat-box">
+            <!-- Response from the server will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        function submitForm() {
+            const formData = new FormData();
+            const urls = document.getElementById('urls').value;
+            formData.append('urls', urls);
+
+            fetch('{{ url_for("chat.url_helper") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Log the response to verify structure
+                const responseContainer = document.getElementById('responseContainer');
+                // Insert the formatted string output as HTML
+                if (data.formatted_output) {
+                    responseContainer.innerHTML = '<h2>Webpage Helper</h2>' + data.formatted_output;
+                } else {
+                    responseContainer.innerHTML = '<h2>Webpage Helper</h2><p>Undefined response from the server.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

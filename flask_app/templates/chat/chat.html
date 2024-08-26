@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Chat with Assistant</h1>
+
+        <!-- Chat Box -->
+        <div id="chat-box" class="chat-box">
+            <!-- Messages will be dynamically loaded here -->
+        </div>
+
+        <!-- Message Input -->
+        <div class="message-input">
+            <textarea id="message" placeholder="Type your message..."></textarea>
+            <button id="send-message" onclick="sendMessage()">Send Message</button>
+        </div>
+
+        <!-- File Upload -->
+        <div class="file-upload">
+            <input type="file" id="file-input">
+            <button id="upload-file" onclick="uploadFile()">Upload File</button>
+            <div id="upload-status" class="upload-status"></div> <!-- Status message container -->
+        </div>
+    </div>
+
+    <script>
+    function sendMessage() {
+        const message = document.getElementById('message').value;
+
+        fetch('{{ url_for("chat.chat") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                'message': message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const chatBox = document.getElementById('chat-box');
+
+            // Clear the chat box to prevent repeated messages
+            chatBox.innerHTML = '';
+
+            // Display the entire conversation history
+            if (Array.isArray(data.message)) {
+                data.message.forEach(msg => {
+                    if (msg.role === 'user') {
+                        chatBox.innerHTML += `<div class="user-message"><strong>User:</strong> ${msg.content}</div>`;
+                    } else if (msg.role === 'assistant') {
+                        const assistantMessageHTML = marked.parse(msg.content);
+                        chatBox.innerHTML += `<div class="bot-message"><strong>Assistant:</strong> ${assistantMessageHTML}</div>`;
+                    }
+                });
+            }
+
+            // Scroll to the bottom of the chat box to show the latest messages
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Clear the input field
+            document.getElementById('message').value = '';
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+
+        function uploadFile() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            const formData = new FormData();
+
+            // Check if a file is selected
+            if (!file) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            formData.append('file', file);
+
+            fetch('{{ url_for("chat.chat") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const uploadStatus = document.getElementById('upload-status');
+                
+                // Clear any previous status messages
+                uploadStatus.textContent = '';
+
+                // Display the upload status based on the message returned by the backend
+                uploadStatus.textContent = data.message;
+
+                // Clear the file input
+                fileInput.value = '';
+            })
+            .catch(error => {
+                const uploadStatus = document.getElementById('upload-status');
+                
+                // Clear any previous status messages
+                uploadStatus.textContent = '';
+
+                // Display a generic failure message if the fetch request fails
+                uploadStatus.textContent = 'File upload failed due to network or server error.';
+                console.error('Error:', error);
+            });
+        }
+
+        window.addEventListener('beforeunload', function() {
+        // Make a synchronous request to ensure it completes before the page unloads
+        navigator.sendBeacon('/clear_thread_id');
+    });
+    </script>
+</body>
+</html>
